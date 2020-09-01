@@ -13,7 +13,7 @@
                 </el-form-item>
                 <!-- 密码input -->
                 <el-form-item prop="password">
-                    <el-input type="password" prefix-icon="el-icon-phone" v-model="loginForm.password"></el-input>
+                    <el-input type="password" prefix-icon="el-icon-phone" v-model="loginForm.password" @keyup.enter.native="login"></el-input>
                 </el-form-item>
                 <!-- 按钮区域 -->
                 <el-form-item class="btns">
@@ -26,12 +26,13 @@
 </template>
 
 <script>
+import Home from './Home'
 export default {
     data: function(){
         return{
             loginForm:{
-                username:'',
-                password:''
+                username:'admin',
+                password:'123456'
             },
             // 实现表单验证三步走：
             // 1.给form添加:rules:"rules"绑定data中rules对象
@@ -63,12 +64,32 @@ export default {
         login: function(){
             //进行表单预验证，验证通过才能发起网络请求
             //验证通过则valid为true
-            this.$refs.loginFormRef.validate((valid) => {
+            this.$refs.loginFormRef.validate(async (valid) => {
                 // console.log(valid);
                 if(!valid)
                     return;
-                let result = this.$http.post('login', this.loginForm)
-                console.log(result);
+                else{
+                    //async await 处理promise对象
+                    let res = await this.$http.post('login', this.loginForm)
+                    console.log(res);
+                    if(res.data.meta.status !== 200){
+                        // console.log("登录失败");
+                        this.$message.error('用户名或密码错误');
+                    }
+                    else {
+                        // console.log("登录成功");
+                        this.$message({
+                            message: '登录成功',
+                            type: 'success'
+                            });
+                        //将登录成功后的token保存到客户端的sessionStorage中
+                            //sessionStorage存储当前会话的信息，localStorage存储长期信息
+                        window.sessionStorage.setItem("token", res.data.data.token);
+                        this.$router.push('/home')
+                    }
+                }
+                
+                    
             })
         }
     }
